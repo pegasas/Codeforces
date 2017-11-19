@@ -1,84 +1,96 @@
+
 #include <bits/stdc++.h>
+template <class T>
+inline bool rd(T &ret) {
+    char c; int sgn;
+    if(c=getchar(),c==EOF) return 0;
+    while(c!='-'&&(c<'0'||c>'9')) c=getchar();
+    sgn=(c=='-')?-1:1;
+    ret=(c=='-')?0:(c-'0');
+    while(c=getchar(),c>='0'&&c<='9') ret=ret*10+(c-'0');
+    ret*=sgn;
+    return 1;
+}
+template <class T>
+inline void pt(T x) {
+    if (x <0) {
+        putchar('-');
+        x = -x;
+    }
+    if(x>9) pt(x/10);
+    putchar(x%10+'0');
+}
 using namespace std;
-const int maxn = 123456 + 5;
-vector<int> G[maxn];
+typedef long long ll;
+#define int ll
+const int N = 200050;
 int n, m;
-int cnt;
-bool On[maxn];
-int A[maxn];
-int tar, d;
-int dis[maxn];
-bool vis[maxn];
-bool dfs1(int s)
-{
-    vis[s] = true;
-    bool flag = false;
-    for(int i = 0; i < G[s].size(); i++) {
-        int u = G[s][i];
-        if(!vis[u]) {
-            dis[u] = dis[s] + 1;
-            flag |= dfs1(u);
-        }
-    }
-
-    if(A[s]) {
-        flag = true;
-        if(dis[s] > d || (dis[s] == d && s < tar)) {
-            d = dis[s];
-            tar = s;
-        }
-    }
-    if(flag) {
-        On[s] = true;
-        cnt++;
-    }
-    return flag;
+struct node{
+    int op, l, r, num, id;
+}a[N*2];
+bool cmp(node x, node y){
+    if(x.r != y.r)
+        return x.r<y.r;
+    if(x.op!=y.op)
+        return x.op<y.op;
 }
-
-void dfs2(int s)
-{
-    vis[s] = true;
-    for(int i = 0; i < G[s].size(); i++) {
-        int u = G[s][i];
-        if(!vis[u] && On[u]) {
-            dis[u] = dis[s] + 1;
-            if(dis[u] > d || (dis[u] == d && u < tar)) {
-                d = dis[u];
-                tar = u;
+int top, b[N];
+void input(){
+    top = 0;
+    for(int i = 1; i <= n; i++){
+        rd(a[top].l); rd(a[top].r);
+        a[top].op = 0;
+        a[top].id = i;
+        top++;
+    }
+    rd(m);
+    for(int i = 1; i <= m; i++){
+        rd(a[top].l); rd(a[top].r); rd(a[top].num);
+        a[top].op = 1;
+        a[top].id = i;
+        top++;
+    }
+    sort(a, a+top, cmp);
+}
+struct Edge{
+    int id, l;
+    bool operator<(const Edge&e)const{
+        if(e.l!=l)return e.l>l;
+        return e.id>id;
+    }
+    Edge(int a=0,int b=0):id(a),l(b){}
+}tmp;
+set<Edge>s;
+set<Edge>::iterator p;
+#undef int
+int main(){
+#define int ll
+    while(cin>>n){
+        input();
+        int ans = 0;
+        s.clear();
+        for(int i = 0; i < top; i++){
+            if(a[i].op){
+                while(s.size() && a[i].num--)
+                {
+                    p = s.lower_bound(Edge(0, a[i].l));
+                    if(p == s.end())break;
+                    tmp = *p;
+                    b[tmp.id] = a[i].id;
+                    s.erase(p);
+                    ans++;
+                }
             }
-            dfs2(u);
+            else {
+                s.insert(Edge(a[i].id, a[i].l));
+            }
         }
+        if(ans == n)
+        {
+            puts("YES");
+            for(int i = 1; i <= n; i++){pt(b[i]); putchar(' ');}
+        }
+        else puts("NO");
     }
-}
-int main()
-{
-    freopen("input.txt","r",stdin);
-    scanf("%d%d", &n, &m);
-    for(int i = 0; i < n - 1; i++) {
-        int u, v;
-        scanf("%d%d", &u, &v);
-        G[u].push_back(v);
-        G[v].push_back(u);
-    }
-
-    for(int i = 0; i < m; i++) {
-        int x;
-        scanf("%d", &x);
-        A[x] = true;
-        tar = x;
-    }
-    fill(dis, dis + n + 1, -1);
-    fill(vis, vis + n + 1, false);
-    d = 0;
-    dis[tar] = 0;
-    dfs1(tar);
-    int k1 = tar;
-    fill(dis, dis + n + 1, -1);
-    fill(vis, vis + n + 1, false);
-    d = 0;
-    dis[tar] = 0;
-    dfs2(tar);
-    int ans = min(k1, tar);
-    printf("%d\n%d", ans, 2*(cnt-1) - d);
     return 0;
 }
